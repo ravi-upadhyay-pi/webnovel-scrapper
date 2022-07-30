@@ -1,0 +1,29 @@
+{
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": true
+    },
+    "eslint.validate": [
+        "javascript"
+    ],
+    // Editor rules
+    "editor.rulers": [
+        100
+    ],
+    "editor.tabSize": 4,
+    "files.insertFinalNewline": true,
+    "files.trimTrailingWhitespace": true,
+    // additional settings which control when to contact Microsoft services
+    // natural language search provided by a Microsoft online service.
+    "workbench.settings.enableNaturalLanguageSearch": false,
+    // When enabled, the notifications for extension recommendations will not be shown.
+    "extensions.ignoreRecommendations": true,
+    // Fetches experiments to run from a Microsoft online service.
+    // generally format on save.
+    "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "modifications",
+    "workbench.colorTheme": "Quiet Light",
+    "explorer.confirmDelete": false,
+    "workbench.startupEditor": "none",
+    "terminal.integrated.enableMultiLinePasteWarning": false,
+    "explorer.confirmDragAndDrop": false,
+}
