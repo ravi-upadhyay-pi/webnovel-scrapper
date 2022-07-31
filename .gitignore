@@ -1,3 +1,31 @@
-node_modules
-out
-*.html
+# release
+release
+release/**
+
+# server directories
+backend/target
+backend/database*
+
+# ui directories
+web-client/node_modules/
+web-client/dist
+web-client/dist-ssr
+web-client/*.local
+web-client/.angular
+web-client/src/generated
+
+# Editor directories and files
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.vscode/*.log
+
+# bazel
+bazel-bin
+bazel-grpc-template
+bazel-out
+bazel-testlogs

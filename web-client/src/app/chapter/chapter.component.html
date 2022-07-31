@@ -1,0 +1,41 @@
+<ng-container *ngIf="chapter | async as ch; else loading">
+  <div class="book-title">{{ ch.getBookTitle() }}</div>
+  <div class="wrapper">
+    <div class="chapter-title">{{ ch.getChapterTitle() }}</div>
+    <ng-container *ngTemplateOutlet="nav"></ng-container>
+    <div class="chapter-content">
+      <div
+        *ngFor="let paragraph of ch.getParagraphsList(); let i = index"
+        [class.section-end]="paragraph === ''"
+      >
+        {{ paragraph }}
+      </div>
+    </div>
+    <ng-container *ngTemplateOutlet="nav"></ng-container>
+  </div>
+</ng-container>
+
+<ng-template #loading>
+  <div>loading ...</div>
+</ng-template>
+
+<ng-template #nav>
+  <div class="nav-bar">
+    <a
+      mat-raised-button
+      color="primary"
+      class="chapter-nav"
+      [routerLink]="getPreviousChapterUrl()"
+    >
+      Previous Chapter
+    </a>
+    <a
+      mat-raised-button
+      color="primary"
+      class="chapter-nav"
+      [routerLink]="getNextChapterUrl()"
+    >
+      Next Chapter
+    </a>
+  </div>
+</ng-template>

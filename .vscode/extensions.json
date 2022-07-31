@@ -1,6 +1,13 @@
 {
-    "recommendations": [
-        "shd101wyy.markdown-preview-enhanced",
-        "dbaeumer.vscode-eslint"
-    ]
+	"recommendations": [
+		"dbaeumer.vscode-eslint",
+		"statiolake.vscode-rustfmt",
+		"eamodio.gitlens",
+		"devondcarew.bazel-code",
+		"angular.ng-template",
+		"UrosVujosevic.explorer-manager",
+		"esbenp.prettier-vscode"
+	],
+	"unwantedRecommendations": [
+	]
 }

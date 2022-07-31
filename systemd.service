@@ -1,0 +1,11 @@
+[Unit]
+Description=Webnove Reader
+After=network.target
+
+[Service]
+User=root
+ExecStart=/srv/webnovel-reader/server
+WorkingDirectory=/srv/webnovel-reader
+
+[Install]
+WantedBy=multi-user.target

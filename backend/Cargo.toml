@@ -1,0 +1,23 @@
+[package]
+name = "backend"
+version = "0.0.0"
+edition = '2021'
+
+[[bin]]
+name="backend"
+path = "src/main.rs"
+
+[dependencies]
+tonic = "0.8.0"
+prost = "0.11.0"
+tonic-web = "0.4.0"
+tokio = { version = "1.20.1", features = ["macros", "rt-multi-thread"] }
+reqwest = "0.11.11"
+scraper = "0.13.0"
+cssparser = "0.27"
+toml = "0.5.9"
+serde = { version = "1.0.140", features = ["derive"] }
+selectors = "0.22.0"
+
+[build-dependencies]
+tonic-build = "0.8.0"
