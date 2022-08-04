@@ -32,10 +32,10 @@ $(PROTOC_GRPC_WEB):
 	sudo chmod +x /usr/bin/protoc-gen-grpc-web
 
 web-client/src/generated: $(PROTOC) $(PROTOC_GRPC_WEB) proto/*.proto
-	mkdir -p web-client/src/generated
-	$(PROTOC) -I="proto" webnovel_reader.proto \
-		--js_out=import_style=commonjs:web-client/src/generated \
-		--grpc-web_out=import_style=typescript,mode=grpcwebtext:web-client/src/generated
+	mkdir -p $@
+	$(PROTOC) -I="proto" webnovel_reader.proto user_account.proto \
+		--js_out=import_style=commonjs:$@ \
+		--grpc-web_out=import_style=typescript,mode=grpcwebtext:$@
 	touch -m $@
 
 format: $(CARGO) $(NPM) web-client/node_modules
@@ -47,10 +47,10 @@ lint: $(CARGO) $(NPM) web-client/node_modules format
 	cd backend && $(CARGO) fix --allow-staged
 
 clean:
-	rm -rf web-client/src/generated
 	rm -rf release
 	rm -rf backend/target
 	rm -rf web-client/dist
+	rm -rf web/src/generated
 
 ##########################
 # Nginx rules
@@ -96,11 +96,13 @@ backend-release: $(CARGO)
 release: test web-client-release backend-release
 	mkdir -p release
 	mkdir -p release/ui-files
-	cp -r ./web-client/dist/ui/* ./release/ui-files/
-	cp ./backend/target/release/backend ./release/server
-	cp ./backend/config/prod.toml ./release/config.toml
-	cp ./nginx/prod.nginx.conf ./release/nginx.conf
-	cp systemd.service ./release/systemd.service
+	cp -r web-client/dist/ui/* release/ui-files/
+	cp backend/target/release/backend release/server
+	mkdir -p release/migrations
+	cp -r backend/migrations/* release/migrations/
+	cp backend/config/prod.toml release/config.toml
+	cp nginx/prod.nginx.conf release/nginx.conf
+	cp systemd.service release/systemd.service
 
 ##########################
 # Release deployment rules

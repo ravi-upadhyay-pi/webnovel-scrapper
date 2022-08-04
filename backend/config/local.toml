@@ -1,2 +1,3 @@
 port = 50051
 log_file = "../var/output.log"
+sqlite_file = "../var/database.sqlite"

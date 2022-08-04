@@ -11,9 +11,14 @@ pub enum ErrorType {
     PoisonError,
     CSSError,
     IoError,
+    SqlxError,
     // Generic Error
     DoesNotExist,
     InvalidArgument,
+    // User Account
+    UsernameExists,
+    TokenNotProvided,
+    SessionDoesNotExist,
     // Webnovel Reader
     ChapterContentNotFound,
     UnexpectedChapterUrl,
@@ -39,9 +44,10 @@ impl ErrorType {
 impl From<&ErrorType> for TonicCode {
     fn from(error_type: &ErrorType) -> TonicCode {
         match error_type {
-            ErrorType::PoisonError | ErrorType::CSSError | ErrorType::IoError => {
-                TonicCode::Internal
-            }
+            ErrorType::PoisonError
+            | ErrorType::CSSError
+            | ErrorType::IoError
+            | ErrorType::SqlxError => TonicCode::Internal,
             ErrorType::DoesNotExist => TonicCode::NotFound,
             _ => TonicCode::InvalidArgument,
         }
@@ -97,6 +103,24 @@ impl<T> From<cssparser::ParseError<'_, T>> for Error {
         Self {
             error_type: ErrorType::CSSError,
             source: None,
+        }
+    }
+}
+
+impl From<sqlx::Error> for Error {
+    fn from(err: sqlx::Error) -> Self {
+        Self {
+            error_type: ErrorType::SqlxError,
+            source: Some(Box::new(err)),
+        }
+    }
+}
+
+impl From<tonic::metadata::errors::ToStrError> for Error {
+    fn from(err: tonic::metadata::errors::ToStrError) -> Self {
+        Self {
+            error_type: ErrorType::InvalidArgument,
+            source: Some(Box::new(err)),
         }
     }
 }

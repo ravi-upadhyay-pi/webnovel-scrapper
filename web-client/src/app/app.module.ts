@@ -12,9 +12,17 @@ import { MatPaginatorModule } from "@angular/material/paginator";
 import { MatProgressBarModule } from "@angular/material/progress-bar";
 import { ChapterComponent } from "./chapter/chapter.component";
 import { BookComponent } from "./book/book.component";
+import { LoginComponent } from "./login/login.component";
+import { HomeComponent } from "./home/home.component";
 
 @NgModule({
-  declarations: [AppComponent, ChapterComponent, BookComponent],
+  declarations: [
+    AppComponent,
+    ChapterComponent,
+    BookComponent,
+    LoginComponent,
+    HomeComponent,
+  ],
   imports: [
     BrowserModule,
     AppRoutingModule,

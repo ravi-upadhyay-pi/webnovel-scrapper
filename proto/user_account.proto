@@ -1,0 +1,26 @@
+syntax = "proto2";
+
+package user_account;
+
+message UserCredential {
+    required string username = 1;
+    required string password = 2;
+}
+
+message AuthenticationToken {
+    required string token = 1;
+}
+
+message UserDetails {
+    required string username = 1;
+    required int64 user_id = 2;
+}
+
+message Empty {}
+
+service UserAccount {
+    rpc Register(UserCredential) returns (AuthenticationToken);
+    rpc Login(UserCredential) returns (AuthenticationToken);
+    rpc GetUserDetails(AuthenticationToken) returns (UserDetails);
+    rpc Logout(AuthenticationToken) returns (Empty);
+}
