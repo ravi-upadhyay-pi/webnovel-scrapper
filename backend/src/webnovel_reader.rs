@@ -1,10 +1,31 @@
 use crate::error::SResult;
-use crate::proto::{Chapter, ChapterId};
 use scraper::Html;
 use scraper::Selector;
 use selectors::attr::CaseSensitivity;
+use crate::webnovel_reader_proto::webnovel_reader_server::WebnovelReader;
+use crate::webnovel_reader_proto::{Chapter, ChapterId};
+use crate::webnovel_reader_proto::{GetChapterInput, GetChapterOutput};
+use tonic::{Request, Response, Status};
+use std::result::Result as StdResult;
 
-pub async fn get_chapter(chapter_id: &ChapterId) -> SResult<Chapter> {
+type TonicResult<T> = StdResult<Response<T>, Status>;
+
+pub struct WebnovelReaderService {
+
+}
+
+#[tonic::async_trait]
+impl WebnovelReader for WebnovelReaderService {
+    async fn get_chapter(
+        &self,
+        request: Request<GetChapterInput>,
+    ) -> TonicResult<GetChapterOutput> {
+        let chapter = get_chapter(&request.get_ref().chapter_id).await?;
+        Ok(Response::new(GetChapterOutput { chapter }))
+    }
+}
+
+async fn get_chapter(chapter_id: &ChapterId) -> SResult<Chapter> {
     let chapter_url = format!(
         "https://novelfull.com/{}/{}.html",
         &chapter_id.book_id, &chapter_id.chapter_id

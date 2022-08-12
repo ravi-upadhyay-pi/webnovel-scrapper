@@ -1,12 +1,11 @@
-pub mod proto {
+pub mod webnovel_reader_proto {
     tonic::include_proto!("webnovel_reader");
 }
 pub mod error;
-pub mod server;
-pub mod service;
+pub mod webnovel_reader;
 
-use crate::server::Server;
-use proto::webnovel_reader_server::WebnovelReaderServer;
+use crate::webnovel_reader_proto::webnovel_reader_server::WebnovelReaderServer;
+use crate::webnovel_reader::WebnovelReaderService;
 use serde::Deserialize;
 use std::fs;
 use tonic::transport::Server as TonicServer;
@@ -21,7 +20,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config_string = fs::read_to_string("Config.toml").unwrap();
     let config: Config = toml::from_str(&config_string).unwrap();
     let addr = format!("127.0.0.1:{}", config.port).parse().unwrap();
-    let server = Server {};
+    let server = WebnovelReaderService {};
     let service = WebnovelReaderServer::new(server);
     let web_serevice = tonic_web::enable(service);
     TonicServer::builder()
