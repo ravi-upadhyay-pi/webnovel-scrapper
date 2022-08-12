@@ -23,6 +23,7 @@ web-client/src/generated
 *.sln
 *.sw?
 .vscode/*.log
+.favorites.json
 
 # bazel
 bazel-bin

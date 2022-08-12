@@ -20,12 +20,11 @@
     "workbench.colorCustomizations": {
         "tree.indentGuidesStroke": "#0b443e"
     },
-    "eslint.run": "onSave",
     "editor.formatOnSave": true,
     "[javascript][typescript][html][scss][json]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
     },
     "[rust]": {
-        "editor.defaultFormatter": "statiolake.vscode-rustfmt",
-    }
+        "editor.defaultFormatter": "rust-lang.rust-analyzer",
+    },
 }
