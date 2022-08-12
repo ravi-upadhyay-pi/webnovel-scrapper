@@ -3,15 +3,7 @@
   <div class="wrapper">
     <div class="chapter-title">{{ ch.getChapterTitle() }}</div>
     <ng-container *ngTemplateOutlet="nav"></ng-container>
-    <div class="chapter-content">
-      <div
-        *ngFor="let paragraph of ch.getParagraphsList(); let i = index"
-        [class.section-end]="paragraph === ''"
-      >
-        {{ paragraph }}
-      </div>
-    </div>
-    <ng-container *ngTemplateOutlet="nav"></ng-container>
+    <div class="chapter-content" [innerHTML]="ch.getHtmlContent()"></div>
   </div>
 </ng-container>
 

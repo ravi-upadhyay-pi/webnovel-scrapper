@@ -1,42 +1,63 @@
 use std::convert::From;
-use std::error::Error;
+use std::error::Error as StdError;
 use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
+use std::result::Result as StdResult;
 use std::sync::PoisonError;
 use tonic::{Code as TonicCode, Status as TonicStatus};
 
 #[derive(Debug)]
-pub enum SErrorType {
+pub enum ErrorType {
+    // Server Error
     PoisonError,
     CSSError,
     IoError,
+    // Generic Error
+    DoesNotExist,
+    InvalidArgument,
+    // Webnovel Reader
+    ChapterContentNotFound,
+    UnexpectedChapterUrl,
+    ChapterTitleNotFound,
+    BookTitleNotFound,
 }
 
-impl Display for SErrorType {
+impl Display for ErrorType {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         Debug::fmt(&self, f)
     }
 }
 
-impl From<&SErrorType> for TonicCode {
-    fn from(error_type: &SErrorType) -> TonicCode {
+impl ErrorType {
+    pub fn to_error(self) -> Error {
+        Error {
+            error_type: self,
+            source: None,
+        }
+    }
+}
+
+impl From<&ErrorType> for TonicCode {
+    fn from(error_type: &ErrorType) -> TonicCode {
         match error_type {
-            SErrorType::PoisonError | SErrorType::CSSError | SErrorType::IoError => {
+            ErrorType::PoisonError | ErrorType::CSSError | ErrorType::IoError => {
                 TonicCode::Internal
             }
+            ErrorType::DoesNotExist => TonicCode::NotFound,
+            _ => TonicCode::InvalidArgument,
         }
     }
 }
 
 #[derive(Debug)]
-pub struct SError {
-    error_type: SErrorType,
-    source: Option<Box<dyn Error + Send + Sync + 'static>>,
+pub struct Error {
+    error_type: ErrorType,
+    source: Option<Box<dyn StdError + Send + Sync + 'static>>,
 }
 
 /** Server Result */
-pub type SResult<T> = Result<T, SError>;
+pub type Result<T> = StdResult<T, Error>;
 
-impl Display for SError {
+impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         match self.source.as_ref() {
             Some(source) => write!(f, "{}: {}", self.error_type, source),
@@ -45,36 +66,36 @@ impl Display for SError {
     }
 }
 
-impl Error for SError {}
+impl StdError for Error {}
 
-impl From<SError> for TonicStatus {
-    fn from(error: SError) -> Self {
+impl From<Error> for TonicStatus {
+    fn from(error: Error) -> Self {
         TonicStatus::new(TonicCode::from(&error.error_type), error.to_string())
     }
 }
 
-impl<T> From<PoisonError<T>> for SError {
-    fn from(_: PoisonError<T>) -> SError {
+impl<T> From<PoisonError<T>> for Error {
+    fn from(_: PoisonError<T>) -> Error {
         Self {
-            error_type: SErrorType::PoisonError,
+            error_type: ErrorType::PoisonError,
             source: None,
         }
     }
 }
 
-impl From<reqwest::Error> for SError {
-    fn from(error: reqwest::Error) -> SError {
+impl From<reqwest::Error> for Error {
+    fn from(error: reqwest::Error) -> Error {
         Self {
-            error_type: SErrorType::IoError,
+            error_type: ErrorType::IoError,
             source: Some(Box::new(error)),
         }
     }
 }
 
-impl<T> From<cssparser::ParseError<'_, T>> for SError {
+impl<T> From<cssparser::ParseError<'_, T>> for Error {
     fn from(_: cssparser::ParseError<'_, T>) -> Self {
         Self {
-            error_type: SErrorType::CSSError,
+            error_type: ErrorType::CSSError,
             source: None,
         }
     }

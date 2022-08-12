@@ -1,18 +1,15 @@
-use crate::error::SResult;
-use scraper::Html;
-use scraper::Selector;
-use selectors::attr::CaseSensitivity;
+use crate::error::{ErrorType, Result};
 use crate::webnovel_reader_proto::webnovel_reader_server::WebnovelReader;
 use crate::webnovel_reader_proto::{Chapter, ChapterId};
 use crate::webnovel_reader_proto::{GetChapterInput, GetChapterOutput};
-use tonic::{Request, Response, Status};
+use scraper::Html;
+use scraper::Selector;
 use std::result::Result as StdResult;
+use tonic::{Request, Response, Status};
 
 type TonicResult<T> = StdResult<Response<T>, Status>;
 
-pub struct WebnovelReaderService {
-
-}
+pub struct WebnovelReaderService {}
 
 #[tonic::async_trait]
 impl WebnovelReader for WebnovelReaderService {
@@ -20,12 +17,19 @@ impl WebnovelReader for WebnovelReaderService {
         &self,
         request: Request<GetChapterInput>,
     ) -> TonicResult<GetChapterOutput> {
-        let chapter = get_chapter(&request.get_ref().chapter_id).await?;
+        let chapter = self.get_chapter(&request.get_ref().chapter_id).await?;
         Ok(Response::new(GetChapterOutput { chapter }))
     }
 }
 
-async fn get_chapter(chapter_id: &ChapterId) -> SResult<Chapter> {
+impl WebnovelReaderService {
+    async fn get_chapter(&self, chapter_id: &ChapterId) -> Result<Chapter> {
+        let chapter = get_chapter(chapter_id).await?;
+        Ok(chapter)
+    }
+}
+
+async fn get_chapter(chapter_id: &ChapterId) -> Result<Chapter> {
     let chapter_url = format!(
         "https://novelfull.com/{}/{}.html",
         &chapter_id.book_id, &chapter_id.chapter_id
@@ -37,11 +41,11 @@ async fn get_chapter(chapter_id: &ChapterId) -> SResult<Chapter> {
         previous_chapter_id: get_chapter_id(&html, false)?,
         book_title: get_book_title(&html)?,
         chapter_title: get_chapter_title(&html)?,
-        paragraphs: get_chapter_paragraphs(&html)?,
+        html_content: get_chapter_content(&html)?,
     })
 }
 
-fn get_book_title(fragment: &Html) -> SResult<String> {
+fn get_book_title(fragment: &Html) -> Result<String> {
     let selector = Selector::parse(".truyen-title")?;
     let title = fragment
         .select(&selector)
@@ -50,7 +54,7 @@ fn get_book_title(fragment: &Html) -> SResult<String> {
     Ok(title)
 }
 
-fn get_chapter_title(fragment: &Html) -> SResult<String> {
+fn get_chapter_title(fragment: &Html) -> Result<String> {
     let selector = Selector::parse(".chapter-text")?;
     let title = fragment
         .select(&selector)
@@ -59,32 +63,18 @@ fn get_chapter_title(fragment: &Html) -> SResult<String> {
     Ok(title)
 }
 
-fn get_chapter_paragraphs(fragment: &Html) -> SResult<Vec<String>> {
+fn get_chapter_content(fragment: &Html) -> Result<String> {
     let selector = Selector::parse("#chapter-content > *")?;
     let chapter_title = get_chapter_title(fragment)?;
-    let paragraphs = fragment
+    let content = fragment
         .select(&selector)
-        .filter(|fragment| {
-            !fragment
-                .value()
-                .has_class("ads", CaseSensitivity::AsciiCaseInsensitive)
-        })
-        .map(|fragment| fragment.text().collect())
-        .filter(|text: &String| {
-            let text = text.trim();
-            !text.is_empty()
-                && !text.starts_with("If you find any errors")
-                && text != chapter_title.as_str()
-        })
-        .map(|text| match text.as_str() {
-            "❄️❄️❄️" => "".to_string(),
-            _ => text,
-        })
-        .collect();
-    Ok(paragraphs)
+        .next()
+        .ok_or(ErrorType::ChapterContentNotFound.to_error())?
+        .inner_html();
+    Ok(content)
 }
 
-fn get_chapter_id(fragment: &Html, next: bool) -> SResult<ChapterId> {
+fn get_chapter_id(fragment: &Html, next: bool) -> Result<ChapterId> {
     let url = get_chapter_url(fragment, next)?;
     let mut parts = url.split("/");
     parts.next();
@@ -102,7 +92,7 @@ fn get_chapter_id(fragment: &Html, next: bool) -> SResult<ChapterId> {
     })
 }
 
-fn get_chapter_url(fragment: &Html, next: bool) -> SResult<String> {
+fn get_chapter_url(fragment: &Html, next: bool) -> Result<String> {
     let id = format!("#{}_chap", if next { "next" } else { "prev" });
     let selector = Selector::parse(&id)?;
     let url = fragment
