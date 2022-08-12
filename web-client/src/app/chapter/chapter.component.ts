@@ -48,9 +48,18 @@ export class ChapterComponent implements OnDestroy {
       this.chapterMap.set(idString, chapter);
     }
     if (changeView) {
-      console.log(chapter);
       this.chapter.next(chapter);
-      this.loadChapter(chapter.getNextChapterId() ?? new ChapterId(), false);
+      await this.loadNextChapters(chapter);
+    }
+    return chapter;
+  }
+
+  async loadNextChapters(chapter: Chapter) {
+    for (let i = 0; i < 10; i++) {
+      chapter = await this.loadChapter(
+        chapter.getNextChapterId() ?? new ChapterId(),
+        false
+      );
     }
   }
 
