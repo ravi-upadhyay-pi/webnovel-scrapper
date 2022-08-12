@@ -9,7 +9,7 @@ message ChapterId {
 message Chapter {
     required string book_title = 2;
     required string chapter_title = 3;
-    repeated string paragraphs = 4;
+    required string html_content = 4;
     required ChapterId previous_chapter_id = 5;
     required ChapterId next_chapter_id = 6;
 }

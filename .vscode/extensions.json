@@ -3,11 +3,12 @@
 		"dbaeumer.vscode-eslint",
 		"statiolake.vscode-rustfmt",
 		"eamodio.gitlens",
-		"devondcarew.bazel-code",
 		"angular.ng-template",
 		"urosvujosevic.explorer-manager",
 		"esbenp.prettier-vscode",
-		"GitHub.vscode-pull-request-github"
+		"GitHub.vscode-pull-request-github",
+		"visualstudioexptteam.vscodeintellicode",
+		"visualstudioexptteam.vscodeintellicode-completions",
 	],
 	"unwantedRecommendations": [
 	]
