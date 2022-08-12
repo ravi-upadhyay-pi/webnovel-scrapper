@@ -22,7 +22,7 @@ export class ChapterComponent implements OnDestroy {
   readonly destroy = new Subject<void>();
 
   constructor(private route: ActivatedRoute) {
-    this.client = new WebnovelReaderClient("");
+    this.client = new WebnovelReaderClient("api");
     this.route.params.pipe(takeUntil(this.destroy)).subscribe(async () => {
       const book = this.route.snapshot.paramMap.get("book");
       const chapter = this.route.snapshot.paramMap.get("chapter");

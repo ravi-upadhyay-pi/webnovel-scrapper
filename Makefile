@@ -53,7 +53,7 @@ clean:
 	rm -rf web-client/dist
 
 ##########################
-# Development server rules
+# Nginx rules
 ##########################
 $(NGINX):
 	sudo apt install -y nginx
@@ -61,9 +61,15 @@ $(NGINX):
 /etc/nginx/sites-enabled/dev.conf: $(NGINX) nginx/dev.nginx.conf
 	sudo cp nginx/dev.nginx.conf $@
 
-/var/run/nginx.pid: $(NGINX) /etc/nginx/sites-enabled/dev.conf
+/etc/nginx/sites-enabled/webnovel-reader-prod.conf: $(NGIX) nginx/prod.nginx.conf
+	sudo cp nginx/prod.nginx.conf $@
+
+/var/run/nginx.pid: $(NGINX) /etc/nginx/sites-enabled/dev.conf /etc/nginx/sites-enabled/webnovel-reader-prod.conf
 	sudo service nginx restart
 
+##########################
+# Development server rules
+##########################
 backend-dev-server: $(CARGO)
 	cd backend && $(CARGO) watch -x run
 

@@ -4,8 +4,8 @@ pub mod webnovel_reader_proto {
 pub mod error;
 pub mod webnovel_reader;
 
-use crate::webnovel_reader_proto::webnovel_reader_server::WebnovelReaderServer;
 use crate::webnovel_reader::WebnovelReaderService;
+use crate::webnovel_reader_proto::webnovel_reader_server::WebnovelReaderServer;
 use serde::Deserialize;
 use std::fs;
 use tonic::transport::Server as TonicServer;
