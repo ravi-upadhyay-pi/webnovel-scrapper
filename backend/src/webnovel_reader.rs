@@ -64,8 +64,7 @@ fn get_chapter_title(fragment: &Html) -> Result<String> {
 }
 
 fn get_chapter_content(fragment: &Html) -> Result<String> {
-    let selector = Selector::parse("#chapter-content > *")?;
-    let chapter_title = get_chapter_title(fragment)?;
+    let selector = Selector::parse("#chapter-content")?;
     let content = fragment
         .select(&selector)
         .next()
