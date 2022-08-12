@@ -23,6 +23,10 @@ impl WebnovelReader for WebnovelReaderService {
 }
 
 impl WebnovelReaderService {
+    pub fn new() -> Self {
+        Self {}
+    }
+
     async fn get_chapter(&self, chapter_id: &ChapterId) -> Result<Chapter> {
         let chapter = get_chapter(chapter_id).await?;
         Ok(chapter)
@@ -39,18 +43,22 @@ async fn get_chapter(chapter_id: &ChapterId) -> Result<Chapter> {
     Ok(Chapter {
         next_chapter_id: get_chapter_id(&html, true)?,
         previous_chapter_id: get_chapter_id(&html, false)?,
-        book_title: get_book_title(&html)?,
+        book_title: get_book_title(&html)?.to_string(),
         chapter_title: get_chapter_title(&html)?,
         html_content: get_chapter_content(&html)?,
     })
 }
 
-fn get_book_title(fragment: &Html) -> Result<String> {
+fn get_book_title(fragment: &Html) -> Result<&str> {
     let selector = Selector::parse(".truyen-title")?;
-    let title = fragment
+    let element = fragment
         .select(&selector)
         .next()
-        .map_or(String::new(), |f| f.text().collect());
+        .ok_or(ErrorType::BookTitleNotFound.to_error())?;
+    let title = element
+        .text()
+        .next()
+        .ok_or(ErrorType::BookTitleNotFound.to_error())?;
     Ok(title)
 }
 
@@ -75,15 +83,18 @@ fn get_chapter_content(fragment: &Html) -> Result<String> {
 
 fn get_chapter_id(fragment: &Html, next: bool) -> Result<ChapterId> {
     let url = get_chapter_url(fragment, next)?;
-    let mut parts = url.split("/");
-    parts.next();
-    let book_id = parts.next().unwrap_or_default().to_string();
-    let chapter_id = parts
-        .next()
-        .unwrap_or_default()
+    let book_id = url
+        .split("/")
+        .nth(1)
+        .ok_or(ErrorType::UnexpectedChapterUrl.to_error())?
+        .to_string();
+    let chapter_id = url
+        .split("/")
+        .nth(2)
+        .ok_or(ErrorType::UnexpectedChapterUrl.to_error())?
         .split(".html")
         .next()
-        .unwrap_or_default()
+        .ok_or(ErrorType::UnexpectedChapterUrl.to_error())?
         .to_string();
     Ok(ChapterId {
         book_id,
@@ -91,17 +102,15 @@ fn get_chapter_id(fragment: &Html, next: bool) -> Result<ChapterId> {
     })
 }
 
-fn get_chapter_url(fragment: &Html, next: bool) -> Result<String> {
+fn get_chapter_url(fragment: &Html, next: bool) -> Result<&str> {
     let id = format!("#{}_chap", if next { "next" } else { "prev" });
     let selector = Selector::parse(&id)?;
     let url = fragment
         .select(&selector)
         .next()
-        .map_or(String::new(), |f| {
-            f.value()
-                .attr("href")
-                .map(|str| str.to_string())
-                .unwrap_or_default()
-        });
+        .ok_or(ErrorType::UnexpectedChapterUrl.to_error())?
+        .value()
+        .attr("href")
+        .ok_or(ErrorType::UnexpectedChapterUrl.to_error())?;
     Ok(url)
 }
