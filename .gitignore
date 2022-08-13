@@ -24,6 +24,7 @@ web-client/src/generated
 *.sw?
 .vscode/*.log
 .favorites.json
+/var/
 
 # bazel
 bazel-bin

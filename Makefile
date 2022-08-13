@@ -71,6 +71,7 @@ $(NGINX):
 # Development server rules
 ##########################
 backend-dev-server: $(CARGO)
+	cd backend && ln -sf config/local.toml config.toml
 	cd backend && $(CARGO) watch -x run
 
 ui-dev-server: $(NPM) $(NG) web-client/src/generated
@@ -82,7 +83,7 @@ dev-server: /var/run/nginx.pid backend-dev-server ui-dev-server
 #####################
 # Release build rules
 #####################
-test: builders-setup format lint
+test: builders-setup lint
 	cd web-client && $(NPM) run test
 	cd backend && $(CARGO) test
 
@@ -97,7 +98,7 @@ release: test web-client-release backend-release
 	mkdir -p release/ui-files
 	cp -r ./web-client/dist/ui/* ./release/ui-files/
 	cp ./backend/target/release/backend ./release/server
-	cp ./backend/Config-Prod.toml ./release/Config.toml
+	cp ./backend/config/prod.toml ./release/config.toml
 	cp ./nginx/prod.nginx.conf ./release/nginx.conf
 	cp systemd.service ./release/systemd.service
 
@@ -107,14 +108,14 @@ release: test web-client-release backend-release
 deployment: release
 	sudo systemctl stop webnovel-reader.service || 0
 	sudo mkdir -p /srv/webnovel-reader
+	sudo mkdir -p /srv/webnovel-reader/var
 	sudo cp release/server /srv/webnovel-reader/server
-	sudo cp release/Config.toml /srv/webnovel-reader/Config.toml
+	sudo cp release/config.toml /srv/webnovel-reader/config.toml
 	sudo cp -r release/ui-files /srv/webnovel-reader/
 	sudo cp release/nginx.conf /etc/nginx/sites-enabled/webnovel-reader-prod.conf
 	sudo cp release/systemd.service /lib/systemd/system/webnovel-reader.service
 	sudo systemctl daemon-reload
 	sudo systemctl restart nginx.service
 	sudo systemctl restart webnovel-reader.service
-
 
 .PHONY: builders-setup format lint clean backend-dev-server ui-dev-server dev-server test web-client-release backend-release release deployment

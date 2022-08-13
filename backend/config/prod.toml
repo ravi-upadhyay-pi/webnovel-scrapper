@@ -1,0 +1,2 @@
+port = 50052
+log_file = "./var/output.log"
