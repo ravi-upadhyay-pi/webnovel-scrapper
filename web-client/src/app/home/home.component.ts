@@ -2,6 +2,7 @@ import { Component, OnInit } from "@angular/core";
 import { BehaviorSubject } from "rxjs";
 import { UserDetails } from "../../generated/user_account_pb";
 import { UserService } from "../user_service";
+import { Title } from "@angular/platform-browser";
 
 @Component({
   selector: "app-home",
@@ -11,7 +12,9 @@ import { UserService } from "../user_service";
 export class HomeComponent implements OnInit {
   readonly userDetails = new BehaviorSubject<UserDetails | null>(null);
 
-  constructor(readonly userService: UserService) {}
+  constructor(readonly userService: UserService, title: Title) {
+    title.setTitle("Webnovels");
+  }
 
   async ngOnInit() {
     const userDetails = await this.userService.getUserDetails();

@@ -9,6 +9,7 @@ import {
 import { BehaviorSubject } from "rxjs";
 import { RpcError } from "grpc-web";
 import { UserService } from "../user_service";
+import { Title } from "@angular/platform-browser";
 
 @Component({
   selector: "app-login",
@@ -25,12 +26,14 @@ export class LoginComponent {
   readonly error = new BehaviorSubject<string | null>(null);
 
   constructor(
-    private activatedRoute: ActivatedRoute,
+    activatedRoute: ActivatedRoute,
     private userService: UserService,
-    private router: Router
+    private router: Router,
+    title: Title
   ) {
     this.type =
       activatedRoute.snapshot.url[0].path === "signup" ? "Register" : "Login";
+    title.setTitle(this.type);
   }
 
   async submit() {

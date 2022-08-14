@@ -8,6 +8,7 @@ import { WebnovelReaderClient } from "../../generated/Webnovel_readerServiceClie
 import { ActivatedRoute } from "@angular/router";
 import { Subject, BehaviorSubject } from "rxjs";
 import { takeUntil } from "rxjs/operators";
+import { Title } from "@angular/platform-browser";
 
 @Component({
   selector: "chapter",
@@ -21,7 +22,7 @@ export class ChapterComponent implements OnDestroy {
   readonly chapterMap = new Map<string, Chapter>();
   readonly destroy = new Subject<void>();
 
-  constructor(private route: ActivatedRoute) {
+  constructor(private route: ActivatedRoute, title: Title) {
     this.client = new WebnovelReaderClient("api");
     this.route.params.pipe(takeUntil(this.destroy)).subscribe(async () => {
       const book = this.route.snapshot.paramMap.get("book");
@@ -31,6 +32,9 @@ export class ChapterComponent implements OnDestroy {
       id.setChapterId(chapter ?? "");
       await this.loadChapter(id, true);
     });
+    this.chapter
+      .pipe(takeUntil(this.destroy))
+      .subscribe((chapter) => title.setTitle(chapter.getChapterTitle()));
   }
 
   ngOnDestroy(): void {
