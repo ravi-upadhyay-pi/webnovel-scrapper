@@ -1,4 +1,4 @@
-use crate::error::{Error, ErrorType};
+use crate::error::{ErrorType, Result};
 use crate::user_account_proto::user_account_server::UserAccount;
 use crate::user_account_proto::{AuthenticationToken, Empty, UserCredential, UserDetails};
 use sqlx::{Pool, Row, Sqlite};
@@ -7,7 +7,6 @@ use tonic::metadata::MetadataMap;
 use tonic::{Request, Response, Status};
 
 type TonicResult<T> = StdResult<Response<T>, Status>;
-type Result<T> = StdResult<T, Error>;
 
 pub struct UserAccountService {
     pool: Pool<Sqlite>,
@@ -56,7 +55,7 @@ impl UserAccountService {
         if count.rows_affected() == 1 {
             self.login(user_credential).await
         } else {
-            Err(ErrorType::UsernameExists.to_error())
+            Err(ErrorType::UsernameExists)
         }
     }
 
@@ -69,11 +68,11 @@ impl UserAccountService {
             .bind(&user_credential.username)
             .fetch_optional(&self.pool)
             .await?
-            .ok_or(ErrorType::DoesNotExist.to_error())?;
+            .ok_or(ErrorType::DoesNotExist)?;
         let password: String = result.get("password");
         let user_id: i64 = result.get("user_id");
         if &password != &user_credential.password {
-            Err(ErrorType::InvalidArgument.to_error())?;
+            Err(ErrorType::InvalidArgument)?;
         }
         let token = uuid::Uuid::new_v4().to_string();
         let insert_query = "
@@ -101,7 +100,7 @@ impl UserAccountService {
             .bind(&authentication_token.token)
             .fetch_optional(&self.pool)
             .await?
-            .ok_or(ErrorType::InvalidArgument.to_error())?;
+            .ok_or(ErrorType::InvalidArgument)?;
         let username: String = result.get("username");
         let user_id: i64 = result.get("user_id");
         Ok(UserDetails { username, user_id })
@@ -121,7 +120,7 @@ impl UserAccountService {
     pub async fn get_user_id(&self, metadata_map: &MetadataMap) -> Result<i64> {
         let token = metadata_map
             .get("token")
-            .ok_or(ErrorType::TokenNotProvided.to_error())?
+            .ok_or(ErrorType::TokenNotProvided)?
             .to_str()?;
         let query = "
         SELECT user_id
@@ -131,7 +130,7 @@ impl UserAccountService {
             .bind(token)
             .fetch_optional(&self.pool)
             .await?
-            .ok_or(ErrorType::SessionDoesNotExist.to_error())?
+            .ok_or(ErrorType::SessionDoesNotExist)?
             .get("user_id");
         Ok(user_id)
     }

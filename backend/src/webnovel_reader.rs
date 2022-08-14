@@ -54,11 +54,8 @@ fn get_book_title(fragment: &Html) -> Result<&str> {
     let element = fragment
         .select(&selector)
         .next()
-        .ok_or(ErrorType::BookTitleNotFound.to_error())?;
-    let title = element
-        .text()
-        .next()
-        .ok_or(ErrorType::BookTitleNotFound.to_error())?;
+        .ok_or(ErrorType::BookTitleNotFound)?;
+    let title = element.text().next().ok_or(ErrorType::BookTitleNotFound)?;
     Ok(title)
 }
 
@@ -76,7 +73,7 @@ fn get_chapter_content(fragment: &Html) -> Result<String> {
     let content = fragment
         .select(&selector)
         .next()
-        .ok_or(ErrorType::ChapterContentNotFound.to_error())?
+        .ok_or(ErrorType::ChapterContentNotFound)?
         .inner_html();
     Ok(content)
 }
@@ -86,15 +83,15 @@ fn get_chapter_id(fragment: &Html, next: bool) -> Result<ChapterId> {
     let book_id = url
         .split("/")
         .nth(1)
-        .ok_or(ErrorType::UnexpectedChapterUrl.to_error())?
+        .ok_or(ErrorType::UnexpectedChapterUrl)?
         .to_string();
     let chapter_id = url
         .split("/")
         .nth(2)
-        .ok_or(ErrorType::UnexpectedChapterUrl.to_error())?
+        .ok_or(ErrorType::UnexpectedChapterUrl)?
         .split(".html")
         .next()
-        .ok_or(ErrorType::UnexpectedChapterUrl.to_error())?
+        .ok_or(ErrorType::UnexpectedChapterUrl)?
         .to_string();
     Ok(ChapterId {
         book_id,
@@ -108,9 +105,9 @@ fn get_chapter_url(fragment: &Html, next: bool) -> Result<&str> {
     let url = fragment
         .select(&selector)
         .next()
-        .ok_or(ErrorType::UnexpectedChapterUrl.to_error())?
+        .ok_or(ErrorType::UnexpectedChapterUrl)?
         .value()
         .attr("href")
-        .ok_or(ErrorType::UnexpectedChapterUrl.to_error())?;
+        .ok_or(ErrorType::UnexpectedChapterUrl)?;
     Ok(url)
 }

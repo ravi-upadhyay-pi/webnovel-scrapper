@@ -3,7 +3,9 @@ use std::error::Error as StdError;
 use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
 use std::result::Result as StdResult;
 use std::sync::PoisonError;
-use tonic::{Code as TonicCode, Status as TonicStatus};
+use tonic::{Code, Status};
+
+pub type Result<T> = StdResult<T, ErrorType>;
 
 #[derive(Debug)]
 pub enum ErrorType {
@@ -11,10 +13,13 @@ pub enum ErrorType {
     PoisonError,
     CSSError,
     IoError,
-    SqlxError,
+    SqlxError(sqlx::Error),
+    ReqwestError(reqwest::Error),
+    TonicMetadataParseError(tonic::metadata::errors::ToStrError),
     // Generic Error
     DoesNotExist,
     InvalidArgument,
+    InternalError,
     // User Account
     UsernameExists,
     TokenNotProvided,
@@ -32,95 +37,47 @@ impl Display for ErrorType {
     }
 }
 
-impl ErrorType {
-    pub fn to_error(self) -> Error {
-        Error {
-            error_type: self,
-            source: None,
-        }
-    }
-}
+impl StdError for ErrorType {}
 
-impl From<&ErrorType> for TonicCode {
-    fn from(error_type: &ErrorType) -> TonicCode {
+impl From<ErrorType> for Status {
+    fn from(error_type: ErrorType) -> Status {
         match error_type {
             ErrorType::PoisonError
             | ErrorType::CSSError
             | ErrorType::IoError
-            | ErrorType::SqlxError => TonicCode::Internal,
-            ErrorType::DoesNotExist => TonicCode::NotFound,
-            _ => TonicCode::InvalidArgument,
+            | ErrorType::SqlxError(_) => Status::new(Code::Internal, ""),
+            ErrorType::DoesNotExist => Status::new(Code::NotFound, ""),
+            _ => Status::new(Code::Internal, ""),
         }
     }
 }
 
-#[derive(Debug)]
-pub struct Error {
-    error_type: ErrorType,
-    source: Option<Box<dyn StdError + Send + Sync + 'static>>,
-}
-
-/** Server Result */
-pub type Result<T> = StdResult<T, Error>;
-
-impl Display for Error {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        match self.source.as_ref() {
-            Some(source) => write!(f, "{}: {}", self.error_type, source),
-            None => write!(f, "{}", self.error_type),
-        }
+impl<T> From<PoisonError<T>> for ErrorType {
+    fn from(_: PoisonError<T>) -> Self {
+        Self::PoisonError
     }
 }
 
-impl StdError for Error {}
-
-impl From<Error> for TonicStatus {
-    fn from(error: Error) -> Self {
-        TonicStatus::new(TonicCode::from(&error.error_type), error.to_string())
+impl From<reqwest::Error> for ErrorType {
+    fn from(error: reqwest::Error) -> Self {
+        Self::ReqwestError(error)
     }
 }
 
-impl<T> From<PoisonError<T>> for Error {
-    fn from(_: PoisonError<T>) -> Error {
-        Self {
-            error_type: ErrorType::PoisonError,
-            source: None,
-        }
-    }
-}
-
-impl From<reqwest::Error> for Error {
-    fn from(error: reqwest::Error) -> Error {
-        Self {
-            error_type: ErrorType::IoError,
-            source: Some(Box::new(error)),
-        }
-    }
-}
-
-impl<T> From<cssparser::ParseError<'_, T>> for Error {
+impl<T> From<cssparser::ParseError<'_, T>> for ErrorType {
     fn from(_: cssparser::ParseError<'_, T>) -> Self {
-        Self {
-            error_type: ErrorType::CSSError,
-            source: None,
-        }
+        Self::InternalError
     }
 }
 
-impl From<sqlx::Error> for Error {
+impl From<sqlx::Error> for ErrorType {
     fn from(err: sqlx::Error) -> Self {
-        Self {
-            error_type: ErrorType::SqlxError,
-            source: Some(Box::new(err)),
-        }
+        Self::SqlxError(err)
     }
 }
 
-impl From<tonic::metadata::errors::ToStrError> for Error {
+impl From<tonic::metadata::errors::ToStrError> for ErrorType {
     fn from(err: tonic::metadata::errors::ToStrError) -> Self {
-        Self {
-            error_type: ErrorType::InvalidArgument,
-            source: Some(Box::new(err)),
-        }
+        Self::TonicMetadataParseError(err)
     }
 }
