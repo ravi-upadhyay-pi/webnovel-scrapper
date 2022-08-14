@@ -32,7 +32,7 @@ export class LoginComponent {
     title: Title
   ) {
     this.type =
-      activatedRoute.snapshot.url[0].path === "signup" ? "Register" : "Login";
+      activatedRoute.snapshot.url[0]?.path === "signup" ? "Register" : "Login";
     title.setTitle(this.type);
   }
 
