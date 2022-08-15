@@ -31,19 +31,17 @@
   padding-block: 10px;
 }
 
-.player {
-  display: flex;
-  justify-content: space-between;
-  background: #e8e8e8;
-  padding-block: 10px;
-}
-
 .chapter-content {
   text-align: justify;
 }
 
-.chapter-content > * {
+.chapter-content p {
   margin-bottom: 10px;
+}
+
+.chapter-content img.emoji {
+  width: 16px;
+  height: 16px;
 }
 
 .section-end {
