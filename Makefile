@@ -2,23 +2,12 @@
 # Build & generated src rules
 ##############################
 HOME := $(HOME)
-NPM := /usr/local/bin/npm
-NG := /usr/local/bin/ng
 CARGO := $(HOME)/.cargo/bin/cargo
 PROTOC := /usr/bin/protoc
-PROTOC_GRPC_WEB := /usr/bin/protoc-gen-grpc-web
+PROTOC_GEN_DART := $(HOME)/.pub-cache/bin/protoc-gen-dart
 NGINX := /usr/sbin/nginx
 
-builders-setup: $(PROTOC) $(PROTOC_GRPC_WEB) $(NPM) $(CARGO) $(NG) web-client/node_modules
-
-$(NPM):
-	sudo apt install -y npm
-
-$(NG): $(NPM)
-	$(NPM) install -g @angular/cli
-
-web-client/node_modules: $(NPM) web-client/package.json
-	cd web-client && $(NPM) install && touch -m node_modules
+builders-setup: $(PROTOC) $(CARGO)
 
 $(CARGO):
 	curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
@@ -26,31 +15,29 @@ $(CARGO):
 $(PROTOC):
 	sudo apt install -y protobuf-compiler
 
-$(PROTOC_GRPC_WEB):
-	wget https://github.com/grpc/grpc-web/releases/download/1.3.1/protoc-gen-grpc-web-1.3.1-linux-x86_64
-	sudo mv protoc-gen-grpc-web-1.3.1-linux-x86_64 /usr/bin/protoc-gen-grpc-web
-	sudo chmod +x /usr/bin/protoc-gen-grpc-web
+$(PROTOC_GEN_DART):
+	dart pub global activate protoc_plugin
 
-web-client/src/generated: $(PROTOC) $(PROTOC_GRPC_WEB) proto/*.proto
+frontend/lib/generated: $(PROTOC_GEN_DART) $(PROTOC) proto/*.proto
 	mkdir -p $@
-	$(PROTOC) -I="proto" webnovel_reader.proto user_account.proto \
-		--js_out=import_style=commonjs:$@ \
-		--grpc-web_out=import_style=typescript,mode=grpcwebtext:$@
+	export PATH="$(PATH)":"$(HOME)/.pub-cache/bin" && \
+	$(PROTOC) --dart_out=grpc:frontend/lib/generated -Iproto \
+		proto/user_account.proto \
+		proto/webnovel_reader.proto
 	touch -m $@
 
-format: $(CARGO) $(NPM) web-client/node_modules
-	cd web-client && $(NPM) run format
+format: $(CARGO)
 	cd backend && $(CARGO) fmt
 
-lint: $(CARGO) $(NPM) web-client/node_modules format
-	cd web-client && $(NPM) run lint
+lint: $(CARGO)
+	cd frontend && flutter analyze
 	cd backend && $(CARGO) fix --allow-staged
 
 clean:
 	rm -rf release
 	rm -rf backend/target
-	rm -rf web-client/dist
-	rm -rf web/src/generated
+	rm -rf frontend/build
+	rm -rf frontend/lib/generated
 
 ##########################
 # Nginx rules
@@ -74,29 +61,29 @@ backend-dev-server: $(CARGO)
 	cd backend && ln -sf config/local.toml config.toml
 	cd backend && $(CARGO) watch -x run
 
-ui-dev-server: $(NPM) $(NG) web-client/src/generated
-	cd web-client && $(NPM) run devserver
+frontend-dev-server: frontend/lib/generated
+	cd frontend && flutter run -d web-server --web-hostname=0.0.0.0 --web-port=50053
 
 # Parallely run backend and ui: `make dev-server --jobs=2`
-dev-server: /var/run/nginx.pid backend-dev-server ui-dev-server
+dev-server: /var/run/nginx.pid backend-dev-server frontend-dev-server
 
 #####################
 # Release build rules
 #####################
 test: builders-setup lint
-	cd web-client && $(NPM) run test
+	cd frontend && flutter test
 	cd backend && $(CARGO) test
 
-web-client-release: builders-setup web-client/src/generated
-	cd web-client && $(NPM) run build
+frontend-release: builders-setup
+	cd frontend && flutter build web --release
 
 backend-release: $(CARGO)
 	cd backend && $(CARGO) build --release
 
-release: test web-client-release backend-release
+release: test frontend-release backend-release
 	mkdir -p release
 	mkdir -p release/ui-files
-	cp -r web-client/dist/ui/* release/ui-files/
+	cp -r frontend-release/build/web/* release/ui-files/
 	cp backend/target/release/backend release/server
 	mkdir -p release/migrations
 	cp -r backend/migrations/* release/migrations/
@@ -120,4 +107,4 @@ deployment: release
 	sudo systemctl restart nginx.service
 	sudo systemctl restart webnovel-reader.service
 
-.PHONY: builders-setup format lint clean backend-dev-server ui-dev-server dev-server test web-client-release backend-release release deployment
+.PHONY: builders-setup format lint clean backend-dev-server frontend-dev-server dev-server test frontend-release backend-release release deployment

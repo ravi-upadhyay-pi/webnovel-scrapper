@@ -1,14 +1,12 @@
 {
-	"recommendations": [
-		"dbaeumer.vscode-eslint",
-		"eamodio.gitlens",
-		"angular.ng-template",
-		"esbenp.prettier-vscode",
-		"github.vscode-pull-request-github",
-		"visualstudioexptteam.vscodeintellicode",
-		"visualstudioexptteam.vscodeintellicode-completions",
-		"kdcro101.favorites"
-	],
-	"unwantedRecommendations": [
-	]
+  "recommendations": [
+    "eamodio.gitlens",
+    "github.vscode-pull-request-github",
+    "visualstudioexptteam.vscodeintellicode",
+    "visualstudioexptteam.vscodeintellicode-completions",
+    "kdcro101.favorites",
+    "dart-code.dart-code",
+    "Dart-Code.flutter"
+  ],
+  "unwantedRecommendations": []
 }
