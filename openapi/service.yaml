@@ -1,0 +1,123 @@
+openapi: 3.0.0
+info:
+  description: User service
+  version: 0.0.1
+  title: User service
+paths:
+  /user:
+    put:
+      summary: Add a new user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserCredential"
+        required: true
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: User exists or weak password.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      summary: Creates a authentication token for user
+      operationId: createAuthenticationToken
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserCredential"
+        required: true
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: User exists or weak password.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    get:
+      summary: Get user details using authentication token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetUserRequest"
+        required: true
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Incorrect authentication token
+    delete:
+      summary: Invalidates authentication token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetUserRequest"
+        required: true
+      responses:
+        "200":
+          description: ""
+        "401":
+          description: Incorrect authentication token
+components:
+  schemas:
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+    GetUserRequest:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+    UserCredential:
+      type: object
+      required:
+        - userName
+        - password
+      properties:
+        userName:
+          type: string
+        password:
+          type: string
+    User:
+      type: object
+      required:
+        - username
+        - userId
+        - authenticationToken
+      properties:
+        userName:
+          type: string
+        userId:
+          type: integer
+          format: int64
+        authenticationToken:
+          type: string

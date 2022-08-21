@@ -1,6 +1,7 @@
 use crate::error::{ErrorType, Result};
 use crate::user_account_proto::user_account_server::UserAccount;
 use crate::user_account_proto::{AuthenticationToken, Empty, UserCredential, UserDetails};
+use log::warn;
 use sqlx::{Pool, Row, Sqlite};
 use std::result::Result as StdResult;
 use tonic::metadata::MetadataMap;
@@ -28,6 +29,7 @@ impl UserAccount for UserAccountService {
         &self,
         request: Request<AuthenticationToken>,
     ) -> TonicResult<UserDetails> {
+        warn!("test");
         let result = self.get_user_details(request.get_ref()).await?;
         Ok(Response::new(result))
     }

@@ -2,6 +2,16 @@
 release
 release/**
 
+# backend generated
+backend/generated/.cargo
+backend/generated/.openapi-generator
+backend/generated/api
+backend/generated/docs
+backend/generated/examples
+backend/generated/.gitignore
+backend/generated/.openapi-generator-ignore
+backend/generated/REDME.md
+
 # server directories
 backend/target
 backend/database*

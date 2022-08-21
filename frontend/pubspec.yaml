@@ -13,8 +13,8 @@ dependencies:
     sdk: flutter
   flutter:
     sdk: flutter
-  protobuf: ^2.1.0
-  grpc: ^3.0.2
+  openapi:
+    path: ./generated
 
 dev_dependencies:
   flutter_test:

@@ -3,27 +3,37 @@
 ##############################
 HOME := $(HOME)
 CARGO := $(HOME)/.cargo/bin/cargo
-PROTOC := /usr/bin/protoc
-PROTOC_GEN_DART := $(HOME)/.pub-cache/bin/protoc-gen-dart
+NPM := /usr/local/bin/npm
 NGINX := /usr/sbin/nginx
+OPEN_API_GENERATOR := /usr/local/bin/openapi-generator-cli
 
-builders-setup: $(PROTOC) $(CARGO)
+builders-setup: $(OPEN_API_GENERATOR) $(CARGO)
 
 $(CARGO):
 	curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
-$(PROTOC):
-	sudo apt install -y protobuf-compiler
+$(NPM):
+	sudo apt install -y npm
 
-$(PROTOC_GEN_DART):
-	dart pub global activate protoc_plugin
+$(OPEN_API_GENERATOR): $(NPM)
+	sudo npm install @openapitools/openapi-generator-cli -g
+	sudo $(OPEN_API_GENERATOR) version-manager set 6.0.0
 
-frontend/lib/generated: $(PROTOC_GEN_DART) $(PROTOC) proto/*.proto
-	mkdir -p $@
-	export PATH="$(PATH)":"$(HOME)/.pub-cache/bin" && \
-	$(PROTOC) --dart_out=grpc:frontend/lib/generated -Iproto \
-		proto/user_account.proto \
-		proto/webnovel_reader.proto
+backend/generated: $(OPEN_API_GENERATOR) openapi/service.yaml
+	$(OPEN_API_GENERATOR) generate \
+		-i openapi/service.yaml \
+		-g rust-server \
+		-o $@ \
+		--package-name=service
+	cd $@ && $(CARGO) fmt
+	touch -m $@
+
+frontend/generated: $(OPEN_API_GENERATOR) openapi/service.yaml
+	$(OPEN_API_GENERATOR) generate \
+		-i openapi/service.yaml \
+		-g dart \
+		-o $@ \
+		--package-name=service
 	touch -m $@
 
 format: $(CARGO)
@@ -34,10 +44,8 @@ lint: $(CARGO)
 	cd backend && $(CARGO) fix --allow-staged
 
 clean:
-	rm -rf release
-	rm -rf backend/target
-	rm -rf frontend/build
-	rm -rf frontend/lib/generated
+	rm -rf backend/generated
+	rm -rf frontend/generated
 
 ##########################
 # Nginx rules

@@ -3,7 +3,6 @@ use std::error::Error as StdError;
 use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
 use std::result::Result as StdResult;
 use std::sync::PoisonError;
-use tonic::{Code, Status};
 
 pub type Result<T> = StdResult<T, ErrorType>;
 
@@ -15,7 +14,6 @@ pub enum ErrorType {
     IoError,
     SqlxError(sqlx::Error),
     ReqwestError(reqwest::Error),
-    TonicMetadataParseError(tonic::metadata::errors::ToStrError),
     // Generic Error
     DoesNotExist,
     InvalidArgument,
@@ -39,19 +37,6 @@ impl Display for ErrorType {
 
 impl StdError for ErrorType {}
 
-impl From<ErrorType> for Status {
-    fn from(error_type: ErrorType) -> Status {
-        match error_type {
-            ErrorType::PoisonError
-            | ErrorType::CSSError
-            | ErrorType::IoError
-            | ErrorType::SqlxError(_) => Status::new(Code::Internal, ""),
-            ErrorType::DoesNotExist => Status::new(Code::NotFound, ""),
-            _ => Status::new(Code::Internal, ""),
-        }
-    }
-}
-
 impl<T> From<PoisonError<T>> for ErrorType {
     fn from(_: PoisonError<T>) -> Self {
         Self::PoisonError
@@ -73,11 +58,5 @@ impl<T> From<cssparser::ParseError<'_, T>> for ErrorType {
 impl From<sqlx::Error> for ErrorType {
     fn from(err: sqlx::Error) -> Self {
         Self::SqlxError(err)
-    }
-}
-
-impl From<tonic::metadata::errors::ToStrError> for ErrorType {
-    fn from(err: tonic::metadata::errors::ToStrError) -> Self {
-        Self::TonicMetadataParseError(err)
     }
 }

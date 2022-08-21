@@ -1,12 +1,11 @@
 {
   "recommendations": [
-    "eamodio.gitlens",
-    "github.vscode-pull-request-github",
-    "visualstudioexptteam.vscodeintellicode",
-    "visualstudioexptteam.vscodeintellicode-completions",
     "kdcro101.favorites",
     "dart-code.dart-code",
-    "Dart-Code.flutter"
+    "dart-code.flutter",
+    "yzhang.markdown-all-in-one",
+    "tamasfe.even-better-toml",
+    "donjayamanne.githistory",
   ],
   "unwantedRecommendations": []
 }

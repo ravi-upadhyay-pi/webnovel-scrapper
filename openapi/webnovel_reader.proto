@@ -1,0 +1,27 @@
+syntax = "proto2";
+package webnovel_reader;
+
+message ChapterId {
+    required string book_id = 1;
+    required string chapter_id = 2;
+}
+
+message Chapter {
+    required string book_title = 2;
+    required string chapter_title = 3;
+    required string html_content = 4;
+    required ChapterId previous_chapter_id = 5;
+    required ChapterId next_chapter_id = 6;
+}
+
+message GetChapterInput {
+    required ChapterId chapter_id= 1;
+}
+
+message GetChapterOutput {
+    required Chapter chapter = 1;
+}
+
+service WebnovelReader {
+    rpc GetChapter(GetChapterInput) returns (GetChapterOutput);
+}
