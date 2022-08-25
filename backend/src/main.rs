@@ -1,23 +1,9 @@
-pub mod webnovel_reader_proto {
-    tonic::include_proto!("webnovel_reader");
-}
-pub mod user_account_proto {
-    tonic::include_proto!("user_account");
-}
-pub mod error;
-pub mod user_account;
-pub mod webnovel_reader;
-
-use crate::user_account::UserAccountService;
-use crate::webnovel_reader::WebnovelReaderService;
-use crate::webnovel_reader_proto::webnovel_reader_server::WebnovelReaderServer;
+use axum::{routing::get, Router};
 use fern::colors::{Color, ColoredLevelConfig};
 use log::info;
 use serde::Deserialize;
 use sqlx::{Pool, Sqlite};
 use std::fs;
-use tonic::transport::Server as TonicServer;
-use user_account_proto::user_account_server::UserAccountServer;
 
 #[derive(Deserialize)]
 struct Config {
@@ -27,24 +13,28 @@ struct Config {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), ()> {
     let config = get_config();
     setup_logger(&config.log_file);
-    info!("Starting server at port {}", config.port);
-    let address_string = format!("127.0.0.1:{}", config.port);
-    let addr = address_string.parse().unwrap();
+    info!("Server will be started at port {}", config.port);
+    let address = format!("0.0.0.0:{}", config.port);
     let pool = get_sqlite_pool(&config).await;
-    let webnovel_server = WebnovelReaderServer::new(WebnovelReaderService::new());
-    let web_webnovel_service = tonic_web::enable(webnovel_server);
-    let user_account_server = UserAccountServer::new(UserAccountService::new(pool));
-    let web_user_account_service = tonic_web::enable(user_account_server);
-    TonicServer::builder()
-        .accept_http1(true)
-        .add_service(web_webnovel_service)
-        .add_service(web_user_account_service)
-        .serve(addr)
-        .await?;
+    let app = Router::new().route(
+        "/",
+        get({
+            let pool = pool.clone();
+            move || handle(pool)
+        }),
+    );
+    axum::Server::bind(&address.parse().unwrap())
+        .serve(app.into_make_service())
+        .await
+        .unwrap();
     Ok(())
+}
+
+async fn handle(_pool: Pool<Sqlite>) -> Result<&'static str, ()> {
+    Ok("Hello World!")
 }
 
 fn get_config() -> Config {
@@ -68,7 +58,7 @@ fn setup_logger(log_file: &str) {
                 message
             ))
         })
-        .level(log::LevelFilter::Warn)
+        .level(log::LevelFilter::Info)
         .chain(std::io::stdout())
         .chain(fern::log_file(log_file).unwrap())
         .apply()
@@ -80,6 +70,5 @@ async fn get_sqlite_pool(config: &Config) -> Pool<Sqlite> {
         .create_if_missing(true)
         .filename(&config.sqlite_file);
     let pool = sqlx::Pool::connect_with(connection_options).await.unwrap();
-    sqlx::migrate!("./migrations").run(&pool).await.unwrap();
     pool
 }

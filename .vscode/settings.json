@@ -1,5 +1,7 @@
 {
-    "editor.rulers": [80],
+    "editor.rulers": [
+        80
+    ],
     // ctrl + alt to see inlay hints
     "editor.inlayHints.enabled": "offUnlessPressed",
     // ctrl-k + ctrl+i to see hover info
@@ -25,6 +27,6 @@
         "editor.defaultFormatter": "esbenp.prettier-vscode",
     },
     "[rust]": {
-        "editor.defaultFormatter": "rust-lang.rust-analyzer",
+        "editor.defaultFormatter": "statiolake.vscode-rustfmt",
     },
 }
